@@ -28,18 +28,24 @@ namespace com.ai.ext.validataTest.Controllers
         [HttpGet]
         public IHttpActionResult GetContact(int id)
         {
-
-            Contact item = Repository.PhoneBook.Where(_item => _item.contactID == id.ToString()).SingleOrDefault();
+            
+Contact item = Repository.PhoneBook.Where(_item => _item.contactID == id.ToString()).SingleOrDefault();
             return item == null ? (IHttpActionResult)BadRequest("No record found") : Ok(item);
         }
 
         [Route("")]
         [HttpPost]        
-        public IHttpActionResult PostContact(string firstname)
+        public IHttpActionResult PostContact(string firstname, string lastname, string type, int number)
         {
             if(firstname != null)
             {
-                Repository.SaveContact(new Contact { FirstName = firstname });
+                Repository.SaveContact(
+                    new Contact {
+                        FirstName = firstname,
+                        LastName = lastname,
+                        Type = type,
+                        Number = number
+                    });
                 return Ok();
             }
             else

@@ -38,7 +38,7 @@ namespace com.ai.ext.validataTest.Models
         {
             try
             {
-                using (Stream stream = File.Open(fileName, FileMode.Create))
+                using (Stream stream = File.Open(fileName, FileMode.OpenOrCreate))
                 {
                     BinaryFormatter bin = new BinaryFormatter();
                     bin.Serialize(stream, contacts);
