@@ -243,3 +243,4 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/com.ai.ext.validataTest/SqlServerUnitTest1.cs

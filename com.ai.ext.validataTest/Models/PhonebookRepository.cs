@@ -14,27 +14,31 @@ namespace com.ai.ext.validataTest.Models
         public PhonebookRepository()
         {
             binFile = new BinFile();
+            //Phonebook = binFile.LocalRead();    
             Phonebook = new List<Contact>();
+            Phonebook = (from l_contact in binFile.LocalRead()
+                         orderby l_contact.FirstName, l_contact.LastName
+                         select l_contact).ToList();
         }
 
         public IEnumerable<Contact> PhoneBook
         {                        
             get
             {              
-                Phonebook = binFile.LocalRead();
+                //Phonebook = binFile.LocalRead();
                 return Phonebook;
             }
         }
 
         public void SaveContact(Contact contact)
         {
-            var _contact = Phonebook.FirstOrDefault(item => item.contactID == contact.contactID);
+            var _contact = Phonebook.FirstOrDefault(item => item.ContactID == contact.ContactID);
             //new contact
             if (_contact == null)
             {
                 var newContact = new Contact
                 {
-                    contactID = Guid.NewGuid().ToString(),
+                    ContactID = Guid.NewGuid().ToString(),
                     FirstName = contact.FirstName,
                     LastName = contact.LastName,
                     Type = contact.Type,
@@ -45,8 +49,7 @@ namespace com.ai.ext.validataTest.Models
             else //contact exist
             {
                 var updatedContact = new Contact
-                {
-                    contactID = _contact.contactID,
+                {                    
                     FirstName = contact.FirstName,
                     LastName = contact.LastName,
                     Type = contact.Type,
@@ -55,27 +58,37 @@ namespace com.ai.ext.validataTest.Models
 
                 Phonebook.Remove(_contact);
                 Phonebook.Add(updatedContact);
-
-                var sortedPhonebook = from l_contact in Phonebook
-                                      orderby l_contact.FirstName
-                                      select l_contact;
-
-                Phonebook = (List<Contact>)sortedPhonebook;
             }
 
-            binFile.LocalWrite(Phonebook);
+            try
+            {
+                binFile.LocalWrite(Phonebook);
+            }
+            catch(Exception ex)
+            {
+                // LOG error
+                throw ex;
+            }
         }
 
-        public Contact DeleteContact(string id)
+        public bool DeleteContact(string Id)
         {
-            var _contact = Phonebook.FirstOrDefault(item => item.contactID == id);
+            var _contact = Phonebook.FirstOrDefault(item => item.ContactID == Id);
             if(_contact != null)
             {
                 Phonebook.Remove(_contact);
+                try
+                {
+                    binFile.LocalWrite(Phonebook);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    // LOG error
+                    throw ex;
+                }
             }
-
-            binFile.LocalWrite(Phonebook);
-            return _contact;
+            return false;            
         }
     }
 }

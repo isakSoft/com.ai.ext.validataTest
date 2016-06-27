@@ -5,7 +5,7 @@ namespace com.ai.ext.validataTest.Models
     [Serializable()]
     public class Contact
     {
-        public string contactID { get; set; }
+        public string ContactID { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Type { get; set; }
@@ -13,7 +13,7 @@ namespace com.ai.ext.validataTest.Models
 
         public Contact()
         {
-            contactID = Guid.NewGuid().ToString();
+            ContactID = Guid.NewGuid().ToString();
         }
 
         public string FullName()

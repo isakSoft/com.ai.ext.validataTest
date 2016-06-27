@@ -10,6 +10,6 @@ namespace com.ai.ext.validataTest.Models
     {
         IEnumerable<Contact> PhoneBook { get; }
         void SaveContact(Contact contact);
-        Contact DeleteContact(string id);
+        bool DeleteContact(string id);
     }
 }

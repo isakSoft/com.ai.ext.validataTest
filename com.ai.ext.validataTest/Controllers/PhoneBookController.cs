@@ -17,36 +17,50 @@ namespace com.ai.ext.validataTest.Controllers
             Repository = new PhonebookRepository();
         }
 
-        [Route("")]
-        [HttpGet]
+        [Route(""), HttpGet]
         public IEnumerable<Contact> Phonebook()
         {
             return Repository.PhoneBook;
         }
 
-        [Route("{id:int}")]
-        [HttpGet]
-        public IHttpActionResult GetContact(int id)
-        {
-            
-Contact item = Repository.PhoneBook.Where(_item => _item.contactID == id.ToString()).SingleOrDefault();
+        [Route("contact"), Route("contact/{Id}"), HttpGet]
+        public IHttpActionResult GetContact(string Id)
+        {            
+            Contact item = Repository.PhoneBook.Where(_item => _item.ContactID == Id).SingleOrDefault();
             return item == null ? (IHttpActionResult)BadRequest("No record found") : Ok(item);
         }
 
-        [Route("")]
-        [HttpPost]        
-        public IHttpActionResult PostContact(string firstname, string lastname, string type, int number)
+        [Route("search"), Route("search/{keyword}"), HttpGet]
+        public IHttpActionResult SearchContact(string keyword)
         {
-            if(firstname != null)
+            var items = Repository.PhoneBook.Where(_item => _item.FirstName.ToLower().Contains(keyword.ToLower())
+            || _item.LastName.ToLower().Contains(keyword.ToLower())).ToList();
+            return items.Count == 0 ? (IHttpActionResult)BadRequest("No record found") : Ok(items);
+        }
+
+        [Route(""), HttpPost]  
+        public IHttpActionResult PostContact([FromBody]Contact contact)
+        {
+            if(contact != null)
             {
-                Repository.SaveContact(
-                    new Contact {
-                        FirstName = firstname,
-                        LastName = lastname,
-                        Type = type,
-                        Number = number
-                    });
-                return Ok();
+                try
+                {
+                    Repository.SaveContact(
+                        new Contact
+                        {
+                            ContactID = contact.ContactID,
+                            FirstName = contact.FirstName,
+                            LastName = contact.LastName,
+                            Type = contact.Type,
+                            Number = contact.Number
+                        });
+                    return Ok("Contact saved successfully");
+                }
+                catch(Exception ex)
+                {
+                    //LOG error
+                    return BadRequest("Couldnt save the contact. Something went wrong.");
+                }
             }
             else
             {
@@ -54,9 +68,25 @@ Contact item = Repository.PhoneBook.Where(_item => _item.contactID == id.ToStrin
             }
         }
 
-        public void DeleteContact(string id)
+        [Route("delete"), Route("delete/{Id}"), HttpPost]
+        public IHttpActionResult DeleteContact(string Id)
         {
-            Repository.DeleteContact(id);
+            try
+            {
+                if (Repository.DeleteContact(Id))
+                {
+                    return Ok("Contact was deleted.");
+                }
+                else
+                {
+                    return BadRequest("Contact not found for deletion.");
+                }
+            }
+            catch
+            {
+                //LOG error
+                return BadRequest("Error. Please contact your Administrator.");
+            }
         }
 
         private IRepository Repository { get; set; }

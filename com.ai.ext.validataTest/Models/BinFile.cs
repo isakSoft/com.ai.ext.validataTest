@@ -19,10 +19,10 @@ namespace com.ai.ext.validataTest.Models
             List<Contact> Phonebook = new List<Contact>();
             try
             {
-                using (Stream stream = File.Open(fileName, FileMode.Open))
+                using (Stream stream = File.Open(fileName, FileMode.OpenOrCreate))
                 {
                     BinaryFormatter bin = new BinaryFormatter();
-                    if (stream != null)
+                    if (stream.Length > 0)
                     {
                         Phonebook = (List<Contact>)bin.Deserialize(stream);
                     }
@@ -30,8 +30,15 @@ namespace com.ai.ext.validataTest.Models
             }
             catch (IOException IOex)
             {
-                return null;
+                // LOG error
+                throw IOex;
             }
+            catch(Exception ex)
+            {
+                // LOG error
+                throw ex;
+            }
+
             return Phonebook;
         }
         public bool LocalWrite(List<Contact> contacts)
@@ -43,12 +50,20 @@ namespace com.ai.ext.validataTest.Models
                     BinaryFormatter bin = new BinaryFormatter();
                     bin.Serialize(stream, contacts);
                 }
+
+                return true;
             }
-            catch (IOException)
+            catch (IOException IOex)
+            {                
+                // LOG error
+                throw IOex;
+            }
+            catch (Exception ex)
             {
-                return false;
+                // LOG error
+                throw ex;
             }
-            return true;
+            return false;
         }
     }
 }
