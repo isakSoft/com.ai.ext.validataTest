@@ -13,12 +13,21 @@ namespace com.ai.ext.validataTest.Controllers
     [RoutePrefix("api/phonebook")]
     public class PhoneBookController : ApiController
     {
+        private UoW uow = null;
+        private List<Contact> phonebook = null;
         /// <summary>
         /// 
         /// </summary>
         public PhoneBookController()
         {
-            Repository = new PhonebookRepository();
+            //Repository = new PhonebookRepository();
+            uow = new UoW();
+            phonebook = new List<Contact>();
+        }
+
+        public PhoneBookController(UoW _uow)
+        {
+            uow = _uow;
         }
 
         /// <summary>
@@ -28,7 +37,8 @@ namespace com.ai.ext.validataTest.Controllers
         [Route(""), HttpGet]
         public IEnumerable<Contact> Phonebook()
         {
-            return Repository.PhoneBook;
+            return uow.Repository<Contact>().GetAll().ToList();
+            //return Repository.PhoneBook;
         }
 
         /// <summary>
@@ -39,9 +49,9 @@ namespace com.ai.ext.validataTest.Controllers
         //[ApiExplorerSettings(IgnoreApi=true)]
         [Route("contact"), Route("contact/{Id}"), HttpGet]
         public IHttpActionResult GetContact(string Id)
-        {            
-            Contact item = Repository.PhoneBook.Where(_item => _item.ContactID == Id).SingleOrDefault();
-            return item == null ? (IHttpActionResult)BadRequest("No record found") : Ok(item);
+        {
+            Contact contact = uow.Repository<Contact>().Get(_item => _item.ContactID == Id);        
+            return contact == null ? (IHttpActionResult)BadRequest("No record found") : Ok(contact);
         }
 
         /// <summary>
@@ -52,9 +62,9 @@ namespace com.ai.ext.validataTest.Controllers
         [Route("search"), Route("search/{keyword}"), HttpGet]
         public IHttpActionResult SearchContact(string keyword)
         {
-            var items = Repository.PhoneBook.Where(_item => _item.FirstName.ToLower().Contains(keyword.ToLower())
+            var items = uow.Repository<Contact>().GetAll(_item => _item.FirstName.ToLower().Contains(keyword.ToLower())
             || _item.LastName.ToLower().Contains(keyword.ToLower())).ToList();
-            return items.Count == 0 ? (IHttpActionResult)BadRequest("No record found") : Ok(items);
+            return items.Count == 0 ? (IHttpActionResult)BadRequest("No record found") : Ok(items);            
         }
 
         /// <summary>
@@ -62,14 +72,28 @@ namespace com.ai.ext.validataTest.Controllers
         /// </summary>
         /// <param name="contact">This is a model</param>
         /// <returns>Http response codes</returns>
-        [Route(""), HttpPost]  
+        [Route(""), HttpPost]
         public IHttpActionResult PostContact([FromBody]Contact contact)
-        {
-            if(contact != null)
+        {                        
+            try
             {
-                try
+                if (contact.ContactID == null) //new contact
                 {
-                    Repository.SaveContact(
+                    uow.Repository<Contact>().Save(
+                        new Contact
+                        {
+                            ContactID = Guid.NewGuid().ToString(), //if null => new contact
+                            FirstName = contact.FirstName,
+                            LastName = contact.LastName,
+                            Type = contact.Type,
+                            Number = contact.Number
+                        }, ref phonebook);
+                }
+                else //update contact
+                {
+                    Contact oldContact = uow.Repository<Contact>().Get(_item => _item.ContactID == contact.ContactID);
+                    uow.Repository<Contact>().Attach(
+                        oldContact, //Old value
                         new Contact
                         {
                             ContactID = contact.ContactID,
@@ -77,33 +101,28 @@ namespace com.ai.ext.validataTest.Controllers
                             LastName = contact.LastName,
                             Type = contact.Type,
                             Number = contact.Number
-                        });
-                    return Ok("Contact saved successfully");
+                        }, ref phonebook);
                 }
-                catch(Exception ex)
-                {
-                    //LOG error
-                    return BadRequest("Couldnt save the contact. Something went wrong.");
-                }
+
+                uow.SaveChanges(phonebook);
+                return Ok("Contact saved successfully");
             }
-            else
+            catch (Exception ex)
             {
-                return BadRequest("Bad request");
+                //LOG error
+                return BadRequest("Couldnt save the contact. Something went wrong.");
             }
         }
 
-        /// <summary>
-        /// Deletes a contact from a given Id
-        /// </summary>
-        /// <param name="Id"></param>
-        /// <returns>Http response codes</returns>
         [Route("delete"), Route("delete/{Id}"), HttpPost]
         public IHttpActionResult DeleteContact(string Id)
         {
             try
             {
-                if (Repository.DeleteContact(Id))
+                Contact _contact = uow.Repository<Contact>().Get(_item => _item.ContactID == Id);
+                if (uow.Repository<Contact>().Remove(_contact, ref phonebook))
                 {
+                    uow.SaveChanges(phonebook);
                     return Ok("Contact was deleted.");
                 }
                 else
@@ -111,13 +130,11 @@ namespace com.ai.ext.validataTest.Controllers
                     return BadRequest("Contact not found for deletion.");
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 //LOG error
                 return BadRequest("Error. Please contact your Administrator.");
             }
         }
-
-        private IRepository Repository { get; set; }
     }
 }

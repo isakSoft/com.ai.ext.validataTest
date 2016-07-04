@@ -162,10 +162,12 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\BinFile.cs" />
+    <Compile Include="Models\BinFileContext.cs" />
+    <Compile Include="Models\GenericRepository.cs" />
     <Compile Include="Models\IRepository.cs" />
     <Compile Include="Models\Contact.cs" />
-    <Compile Include="Models\PhonebookRepository.cs" />
+    <Compile Include="Models\PhonebookBinFileContext.cs" />
+    <Compile Include="Models\UoW.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

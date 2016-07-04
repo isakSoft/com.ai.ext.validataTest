@@ -512,12 +512,5 @@
             <returns>May return a list of contacts</returns>
         </member>
         <!-- Badly formed XML comment ignored for member "M:com.ai.ext.validataTest.Controllers.PhoneBookController.PostContact(com.ai.ext.validataTest.Models.Contact)" -->
-        <member name="M:com.ai.ext.validataTest.Controllers.PhoneBookController.DeleteContact(System.String)">
-            <summary>
-            Deletes a contact from a given Id
-            </summary>
-            <param name="Id"></param>
-            <returns>Http response codes</returns>
-        </member>
     </members>
 </doc>
