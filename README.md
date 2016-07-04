@@ -1,3 +1,5 @@
+This project implements best code standards: UnitOfWork & Generic Repository design pattern, IoC & DI, Context Layer 
+
 =======================================================
 # Test cases are completed using PostMan Chrome Extension
 =======================================================
